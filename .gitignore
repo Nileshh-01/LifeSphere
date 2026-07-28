@@ -10,6 +10,12 @@
 !.yarn/releases
 !.yarn/versions
 
+# Build outputs
+dist/
+
+# Coverage
+coverage/
+
 # testing
 /coverage
 
@@ -39,3 +45,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# VS Code (personal settings only)
+.vscode/settings.json
