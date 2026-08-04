@@ -130,6 +130,31 @@ function mapStatusToState(
 }
 
 /**
+ * Recursively convert absolute (world-space) positions to parent-relative
+ * (local) positions so that the Theme Engine and Renderer can compose them
+ * correctly as a scene-graph hierarchy.
+ *
+ * Rotation and scale are left unchanged — rotation is already [0,0,0] in the
+ * MVP, and scale values are independent visual sizes per object (not nested
+ * TRS compositions).
+ */
+function localizeTransforms(
+  obj: WorldObject,
+  parentPosition: [number, number, number] = [0, 0, 0],
+): void {
+  const oldPos = obj.transform.position as [number, number, number];
+  const localPos: [number, number, number] = [
+    oldPos[0] - parentPosition[0],
+    oldPos[1] - parentPosition[1],
+    oldPos[2] - parentPosition[2],
+  ];
+  obj.transform.position = localPos;
+  for (const child of obj.children) {
+    localizeTransforms(child, oldPos);
+  }
+}
+
+/**
  * Build a lookup of node ID → GraphNode from the graph.
  */
 function buildNodeLookup(graph: GraphData): Map<string, GraphNode> {
@@ -358,6 +383,11 @@ export class WorldGenerator {
     const progression = this.computeGlobalProgression(graph);
 
     // Stage 5: Assemble WorldScene
+    // Convert absolute positions to parent-relative local positions so
+    // downstream stages (Theme Engine, Renderer) can compose the tree
+    // correctly as a scene graph without compounding offsets.
+    localizeTransforms(root);
+
     const scene: WorldScene = {
       metadata: {
         seed: layoutOutput.seed,
